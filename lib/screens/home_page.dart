@@ -115,7 +115,7 @@ class _HomePageState extends State<HomePage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigate to task adding page
+          Navigator.pushReplacementNamed(context, '/addtask');
         },
         child: Icon(Icons.add),
       ),

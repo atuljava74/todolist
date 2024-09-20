@@ -95,18 +95,18 @@ class _LoginPageState extends State<LoginPage> {
                           });
                         }
                       },
-                      child: Text(
-                        'Login',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                        ),
-                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xff861C5B),
                         minimumSize: Size(double.infinity, 60), // Full-width button
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      child: const Text(
+                        'Login',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
                         ),
                       ),
                     ),

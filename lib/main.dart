@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:todolist/screens/add_task.dart';
 import 'package:todolist/screens/home_page.dart';
 import 'package:todolist/screens/login.dart';
 import 'package:todolist/screens/signup.dart';
@@ -30,7 +31,8 @@ class TodoListApp extends StatelessWidget {
         routes: {
           '/login': (context) => LoginPage(),
           '/signup': (context) => SignupPage(),
-          '/home': (context) => HomePage(), // Implement your HomePage
+          '/home': (context) => HomePage(),
+          '/addtask': (context) => AddTaskPage()
         },
       ),
     );
