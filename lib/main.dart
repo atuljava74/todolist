@@ -5,7 +5,8 @@ import 'package:todolist/screens/add_task.dart';
 import 'package:todolist/screens/home_page.dart';
 import 'package:todolist/screens/login.dart';
 import 'package:todolist/screens/signup.dart';
-import 'package:todolist/viewmodels/edit_task_vm.dart';
+import 'package:todolist/viewmodels/calendar_vm.dart';
+import 'package:todolist/viewmodels/home_vm.dart';
 import 'package:todolist/viewmodels/login_vm.dart';
 import 'package:todolist/viewmodels/signup_vm.dart';
 import 'package:todolist/viewmodels/task_vm.dart';
@@ -28,12 +29,17 @@ class TodoListApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => LoginViewModel()),
         ChangeNotifierProvider(create: (_) => SignupViewModel()),
-        ChangeNotifierProvider(create: (_) => EditTaskViewModel()),
         ChangeNotifierProvider(create: (_) => TaskViewModel()),
+        ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(create: (_) => ThemeViewModel()),
+        ChangeNotifierProvider(create: (_) => CalendarViewModel()),
       ],
       child: MaterialApp(
         initialRoute: '/login',
+        theme: ThemeData(
+          fontFamily: 'Montserrat',
+          scaffoldBackgroundColor: Color.fromRGBO(246, 246, 246, 1),
+        ),
         routes: {
           '/login': (context) => LoginPage(),
           '/signup': (context) => SignupPage(),

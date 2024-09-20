@@ -1,223 +1,191 @@
-import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:intl/intl.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:todolist/viewmodels/home_vm.dart';
+import 'package:todolist/widgets/icon_widget.dart';
+import 'package:todolist/widgets/todo_list_widget.dart';
+
 import '../model/task.dart';
-import '../services/auth_service.dart';
 import '../services/database_service.dart';
+import '../utils/utils.dart';
 import '../viewmodels/theme_vm.dart';
 import 'calendar_page.dart';
 import 'edit_task.dart';
 import 'login.dart';
+
 class HomePage extends StatefulWidget {
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  late Future<String?> _usernameFuture;
-
-  // Fetch the username from Firestore
-  Future<String?> _getUsername() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
-          .doc(user.uid)
-          .get();
-      return userDoc['username'];
-    }
-    return null;
-  }
-
+  late HomeViewModel _homeViewModel;
   late DatabaseService _databaseService;
-  String _selectedDate = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
   @override
   void initState() {
     super.initState();
     _initializeUser();
-    _usernameFuture = _getUsername();
-
+    Provider.of<HomeViewModel>(context, listen: false).setUserName();
   }
 
-  // Initialize the user and DatabaseService
   void _initializeUser() {
-    User? user = FirebaseAuth.instance.currentUser; // Get the current user from FirebaseAuth
+    User? user = FirebaseAuth
+        .instance.currentUser; // Get the current user from FirebaseAuth
     if (user != null) {
-      _databaseService = DatabaseService(uid: user.uid); // Initialize the DatabaseService with the user's uid
+      _databaseService = DatabaseService(
+          uid: user.uid); // Initialize the DatabaseService with the user's uid
+      Provider.of<HomeViewModel>(context, listen: false).setTotalTaskCount();
+      Utils.userId = user.uid;
     }
   }
 
-  // Fetch today's tasks for the logged-in user
   Stream<List<Task>> _getTasksForToday() {
     return _databaseService.tasks; // Get the tasks for the current user
   }
 
-  // Count total tasks for today (if needed)
-  Future<int> _getTaskCount() async {
-    final snapshot = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(FirebaseAuth.instance.currentUser?.uid)
-        .collection('tasks')
-        .get();
-    return snapshot.size;
-  }
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext pageContext) {
+    _homeViewModel = pageContext.watch<HomeViewModel>();
     return Scaffold(
-      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        title: FutureBuilder<String?>(
-          future: _usernameFuture,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Text('TodoList');
-            } else if (snapshot.hasError || snapshot.data == null) {
-              return Text('TodoList');
-            } else {
-              return Text('Hi, ${snapshot.data!}');
-            }
-          },
+        backgroundColor: Colors.white,
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hello!',
+              style: TextStyle(
+                fontSize: 16,
+              ),
+            ),
+            Text(
+              _homeViewModel.userName,
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 26,
+              ),
+            ),
+          ],
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.calendar_today),
+            icon: IconWidget(icon: 'assets/calendar.svg'),
             onPressed: () {
               Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CalendarPage()),
+                pageContext,
+                MaterialPageRoute(
+                    builder: (context) => CalendarPage(uid: Utils.userId)),
               );
             },
           ),
           // Three-dot icon for menu
-          PopupMenuButton<String>(
-            icon: Icon(Icons.more_vert),
-            onSelected: (value) {
-              if (value == 'theme') {
-                _showThemeToggleDialog(context);
-              } else if (value == 'logout') {
-                _logout();
-              }
-            },
-            itemBuilder: (BuildContext context) {
-              return [
-                PopupMenuItem(
-                  value: 'theme',
-                  child: Row(
-                    children: [
-                      Icon(Icons.brightness_6),
-                      SizedBox(width: 8),
-                      Text('Change Theme'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'logout',
-                  child: Row(
-                    children: [
-                      Icon(Icons.logout),
-                      SizedBox(width: 8),
-                      Text('Logout'),
-                    ],
-                  ),
-                ),
-              ];
-            },
-          ),
+          Container(
+            margin: EdgeInsets.only(right: 10),
+            child: IconWidget(
+              icon: 'assets/logout.svg',
+              onTap: () => _logout(),
+            ),
+          )
         ],
       ),
       body: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        children: [
-          Container(
-            height: 10,
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Color(0xff053262),
-                  Color(0xff053262),
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: "Your total pending tasks ",
+                    style: TextStyle(
+                      fontSize: 19,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  TextSpan(
+                    text: '${_homeViewModel.totalTaskCount}',
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
               ),
             ),
-          ),
-          FutureBuilder<int>(
-            future: _getTaskCount(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return CircularProgressIndicator();
-              } else if (snapshot.hasError) {
-                return Text("Error: ${snapshot.error}");
-              } else {
-                return Text(
-                  'Total tasks today: ${snapshot.data}',
-                  style: TextStyle(fontSize: 22),
-                );
-              }
-            },
-          ),
-          Expanded(
-            child: StreamBuilder<List<Task>>(
-              stream: _getTasksForToday(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Center(child: CircularProgressIndicator());
-                }
-                final tasks = snapshot.data!;
-                return ListView.builder(
-                  itemCount: tasks.length,
-                  itemBuilder: (context, index) {
-                    final task = tasks[index];
-                    return Card(
-                      child: ListTile(
-                        title: Text(task.title),
-                        subtitle: Text(task.description),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(Icons.edit),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => EditTaskPage(
-                                      taskId: task.id,
-                                      initialTitle: task.title,
-                                      initialDescription: task.description,
-                                      initialDate: task.date,
+            Expanded(
+              child: StreamBuilder<List<Task>>(
+                stream: _getTasksForToday(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+                  final tasks = snapshot.data!;
+                  return ListView.builder(
+                    itemCount: tasks.length,
+                    itemBuilder: (context, index) {
+                      final task = tasks[index];
+                      return TodoListWidget(
+                        task: task,
+                        toggleTaskCompleted: () async {
+                          await _databaseService.updateTask(
+                            task.id,
+                            !task.isCompleted,
+                          );
+                          setState(() {});
+                        },
+                        refreshPage: () => setState(() {}),
+                        margin: EdgeInsets.symmetric(vertical: 8),
+                      );
+                      return Card(
+                        child: ListTile(
+                          title: Text(task.title),
+                          subtitle: Text(task.description),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.edit),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => EditTaskPage(
+                                        taskId: task.id,
+                                        initialTitle: task.title,
+                                        initialDescription: task.description,
+                                        initialDate: task.date,
+                                        userId: Utils.userId,
+                                      ),
                                     ),
-                                  ),
-                                );
-                              },
-                            ),
-                            IconButton(
-                              icon: Icon(Icons.delete),
-                              onPressed: () {
-                                _databaseService.deleteTask(task.id);
-                              },
-                            ),
-                          ],
+                                  );
+                                },
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.delete),
+                                onPressed: () async {
+                                  await _databaseService.deleteTask(task.id);
+                                  Provider.of<HomeViewModel>(pageContext,
+                                          listen: false)
+                                      .updateTaskCount();
+                                },
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
-      ),
+                      );
+                    },
+                  );
+                },
               ),
+            ),
+          ],
+        ),
+      ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.pushNamed(context, '/addtask');
+          Navigator.pushNamed(pageContext, '/addtask');
         },
         child: Icon(Icons.add),
       ),
@@ -258,7 +226,8 @@ class _HomePageState extends State<HomePage> {
     await FirebaseAuth.instance.signOut();
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginPage()), // Assuming you have a LoginPage
+      MaterialPageRoute(
+          builder: (context) => LoginPage()), // Assuming you have a LoginPage
     );
   }
 }

@@ -1,11 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:todolist/viewmodels/home_vm.dart';
+import 'package:todolist/widgets/icon_widget.dart';
 
 import '../viewmodels/task_vm.dart';
 import '../viewmodels/theme_vm.dart';
-import 'login.dart';
 
 class AddTaskPage extends StatefulWidget {
   @override
@@ -23,45 +24,21 @@ class _AddTaskPageState extends State<AddTaskPage> {
       create: (_) => TaskViewModel(),
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Add Task'),
-          actions: [
-            PopupMenuButton<String>(
-              icon: Icon(Icons.more_vert), // Explicitly define the 3-dots icon
-              onSelected: (value) async {
-                if (value == 'theme') {
-                  _showThemeToggleDialog(context);
-                } else if (value == 'logout') {
-                  await FirebaseAuth.instance.signOut();
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (context) => LoginPage()), // Redirect to login page
-                  );
-                }
-              },
-              itemBuilder: (context) => [
-                PopupMenuItem(
-                  value: 'theme',
-                  child: Row(
-                    children: [
-                      Icon(Icons.brightness_6),
-                      SizedBox(width: 8),
-                      Text('Change Theme'),
-                    ],
-                  ),
-                ),
-                PopupMenuItem(
-                  value: 'logout',
-                  child: Row(
-                    children: [
-                      Icon(Icons.logout),
-                      SizedBox(width: 8),
-                      Text('Logout'),
-                    ],
-                  ),
-                ),
-              ],
+          leading: Center(
+            child: IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: IconWidget(
+                height: 25,
+                icon: Icon(Icons.arrow_back, size: 17),
+                showBorder: true,
+              ),
             ),
-          ],
+          ),
+          backgroundColor: Colors.white,
+          title: Text(
+            'Add Task',
+            style: TextStyle(fontWeight: FontWeight.w500, fontSize: 20),
+          ),
         ),
         body: Consumer<TaskViewModel>(
           builder: (context, taskViewModel, child) {
@@ -106,41 +83,63 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       trailing: Icon(Icons.calendar_today),
                       onTap: () => taskViewModel.selectDate(context),
                     ),
-                    SizedBox(height: 20),
+                    Spacer(),
                     taskViewModel.isLoading
                         ? CircularProgressIndicator()
                         : ElevatedButton(
-                      onPressed: () async {
-                        if (_formKey.currentState!.validate()) {
-                          User? user = FirebaseAuth.instance.currentUser;
-                          if (user != null) {
-                            await taskViewModel.addTask(
-                              user.uid,
-                              _titleController.text,
-                              _descriptionController.text,
-                            );
-                            if (taskViewModel.errorMessage == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text('Task added successfully!')),
-                              );
-                              Navigator.pop(context); // Close the add task page
-                            } else {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(taskViewModel.errorMessage!)),
-                              );
-                            }
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Error: User not authenticated')),
-                            );
-                          }
-                        }
-                      },
-                      child: Text('Add Task'),
-                      style: ElevatedButton.styleFrom(
-                        minimumSize: Size(double.infinity, 50),
-                      ),
-                    ),
+                            onPressed: () async {
+                              if (_formKey.currentState!.validate()) {
+                                User? user = FirebaseAuth.instance.currentUser;
+                                if (user != null) {
+                                  await taskViewModel.addTask(
+                                    user.uid,
+                                    _titleController.text,
+                                    _descriptionController.text,
+                                  );
+                                  Provider.of<HomeViewModel>(context,
+                                          listen: false)
+                                      .updateTaskCount();
+                                  if (taskViewModel.errorMessage == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content:
+                                              Text('Task added successfully!')),
+                                    );
+                                    Navigator.pop(
+                                        context); // Close the add task page
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content: Text(
+                                              taskViewModel.errorMessage!)),
+                                    );
+                                  }
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                            'Error: User not authenticated')),
+                                  );
+                                }
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xff861C5B),
+                              minimumSize: Size(
+                                  double.infinity, 50), // Full-width button
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: const Text(
+                              'Add Task',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w500,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
                   ],
                 ),
               ),
