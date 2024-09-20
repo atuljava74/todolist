@@ -1,40 +1,34 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../services/auth_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 
 class SignupViewModel extends ChangeNotifier {
-  final AuthService _authService = AuthService();
-  bool _isLoading = false;
-  String? _errorMessage;
+  bool isLoading = false;
+  String? errorMessage;
 
-  bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
-
-  Future<void> signup(String email, String password) async {
-    _setLoading(true);
-    _setErrorMessage(null);
-
-    try {
-      User? user = await _authService.signUp(email, password);
-      if (user != null) {
-        // Handle successful signup (you can add more logic here if needed)
-      } else {
-        _setErrorMessage('Signup failed. Please try again.');
-      }
-    } catch (e) {
-      _setErrorMessage('An error occurred: ${e.toString()}');
-    }
-
-    _setLoading(false);
-  }
-
-  void _setLoading(bool value) {
-    _isLoading = value;
+  Future<void> signup(String email, String password, String username) async {
+    isLoading = true;
     notifyListeners();
-  }
+    try {
+      // Create user in Firebase Authentication
+      UserCredential userCredential = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(email: email, password: password);
 
-  void _setErrorMessage(String? message) {
-    _errorMessage = message;
+      // Save the username and other user info in Firestore
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .set({
+        'email': email,
+        'username': username, // Save the username
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      errorMessage = null;
+    } on FirebaseAuthException catch (e) {
+      errorMessage = e.message;
+    }
+    isLoading = false;
     notifyListeners();
   }
 }

@@ -2,7 +2,7 @@ class Task {
   final String id;
   final String title;
   final String description;
-  final String date;
+  final DateTime date;
   final bool isCompleted;
 
   Task({

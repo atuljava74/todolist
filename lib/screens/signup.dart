@@ -11,6 +11,7 @@ class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
   String _email = '';
   String _password = '';
+  String _username = ''; // Added username field
 
   @override
   Widget build(BuildContext context) {
@@ -40,6 +41,27 @@ class _SignupPageState extends State<SignupPage> {
                     Image.asset(
                       'assets/app_icon.png', // Add your image to the assets folder and update this path
                       height: 150,
+                    ),
+                    SizedBox(height: 20),
+                    // Username field
+                    TextFormField(
+                      decoration: InputDecoration(
+                        labelText: 'Username',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                      ),
+                      onChanged: (value) {
+                        _username = value;
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Please enter a username';
+                        }
+                        return null;
+                      },
                     ),
                     SizedBox(height: 20),
                     TextFormField(
@@ -88,9 +110,12 @@ class _SignupPageState extends State<SignupPage> {
                         : ElevatedButton(
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
-                          signupViewModel.signup(_email, _password).then((_) {
+                          signupViewModel
+                              .signup(_email, _password, _username) // Pass the username
+                              .then((_) {
                             if (signupViewModel.errorMessage == null) {
-                              Navigator.pushReplacementNamed(context, '/home');
+                              Navigator.pushReplacementNamed(
+                                  context, '/home');
                             }
                           });
                         }
@@ -104,7 +129,8 @@ class _SignupPageState extends State<SignupPage> {
                       ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xff861C5B),
-                        minimumSize: Size(double.infinity, 60), // Full-width button
+                        minimumSize:
+                        Size(double.infinity, 60), // Full-width button
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
