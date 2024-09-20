@@ -21,27 +21,117 @@ class _CalendarPageState extends State<CalendarPage> {
         .snapshots();
   }
 
+  // To get the start of the week from the selected date
+  DateTime _getStartOfWeek(DateTime date) {
+    return date.subtract(Duration(days: date.weekday - 1));
+  }
+
+  // Generate 7 days list starting from the current start of the week
+  List<DateTime> _getCurrentWeekDays() {
+    DateTime startOfWeek = _getStartOfWeek(_selectedDay);
+    return List.generate(7, (index) => startOfWeek.add(Duration(days: index)));
+  }
+
+  // Move to previous week
+  void _goToPreviousWeek() {
+    setState(() {
+      _selectedDay = _selectedDay.subtract(Duration(days: 7));
+      _selectedDate = DateFormat('yyyy-MM-dd').format(_selectedDay);
+    });
+  }
+
+  // Move to next week
+  void _goToNextWeek() {
+    setState(() {
+      _selectedDay = _selectedDay.add(Duration(days: 7));
+      _selectedDate = DateFormat('yyyy-MM-dd').format(_selectedDay);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    List<DateTime> weekDays = _getCurrentWeekDays();
+    String monthYear = DateFormat('MMMM yyyy').format(_selectedDay); // Format the month and year
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Tasks for $_selectedDate'),
       ),
       body: Column(
         children: [
-          TableCalendar(
-            firstDay: DateTime(2020),
-            lastDay: DateTime(2050),
-            focusedDay: _selectedDay,
-            selectedDayPredicate: (day) {
-              return isSameDay(_selectedDay, day);
-            },
-            onDaySelected: (selectedDay, focusedDay) {
-              setState(() {
-                _selectedDay = selectedDay;
-                _selectedDate = DateFormat('yyyy-MM-dd').format(selectedDay);
-              });
-            },
+          // Month, Year and navigation buttons
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                IconButton(
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: _goToPreviousWeek,
+                ),
+                Text(
+                  monthYear,
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                IconButton(
+                  icon: Icon(Icons.arrow_forward),
+                  onPressed: _goToNextWeek,
+                ),
+              ],
+            ),
+          ),
+          // Horizontal scrollable dates for the current week
+          Container(
+            height: 60,
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: weekDays.length,
+              itemBuilder: (context, index) {
+                final day = weekDays[index];
+                final isSelected = isSameDay(_selectedDay, day);
+
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _selectedDay = day;
+                      _selectedDate = DateFormat('yyyy-MM-dd').format(day);
+                    });
+                  },
+                  child: Container(
+                    width: 80,
+                    margin: EdgeInsets.symmetric(horizontal: 8),
+                    decoration: BoxDecoration(
+                      color: isSelected ? Colors.blue : Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: isSelected ? Colors.blue : Colors.grey,
+                      ),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          DateFormat('EEE').format(day), // Day name (e.g., Mon)
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: isSelected ? Colors.white : Colors.black,
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        Text(
+                          DateFormat('dd').format(day), // Date (e.g., 12)
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: isSelected ? Colors.white : Colors.black,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
           ),
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
