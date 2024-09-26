@@ -47,28 +47,29 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBj-dWWKhTtV4KuwG3XWWsu2alxFTtWvWk',
-    appId: '1:933093544643:web:bb946add5f11d06b1b0876',
-    messagingSenderId: '933093544643',
-    projectId: 'todo-list-84179',
-    authDomain: 'todo-list-84179.firebaseapp.com',
-    storageBucket: 'todo-list-84179.appspot.com',
+    apiKey: '###your Api key ###',
+    appId: '### your app id ###',
+    messagingSenderId: '###',
+    projectId: '##',
+    authDomain: '##',
+    storageBucket: '##',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyBZPbeQNLfciHDERSalsInLLNQHwSZ5o-g',
-    appId: '1:933093544643:android:30d3cdb4a2c9fc4e1b0876',
-    messagingSenderId: '933093544643',
-    projectId: 'todo-list-84179',
-    storageBucket: 'todo-list-84179.appspot.com',
+    apiKey: '###your Api key ###',
+    appId: '### your app id ###',
+    messagingSenderId: '###',
+    projectId: '##',
+    storageBucket: '##',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyCE6JdiKC0RWkUqbyvz0I_3yM8abZiZZcU',
-    appId: '1:933093544643:ios:de8930d25ca0ec621b0876',
-    messagingSenderId: '933093544643',
-    projectId: 'todo-list-84179',
-    storageBucket: 'todo-list-84179.appspot.com',
+    apiKey: '###your Api key ###',
+    appId: '### your app id ###',
+    messagingSenderId: '###',
+    projectId: '##',
+    authDomain: '##',
+    storageBucket: '##',
     iosBundleId: 'com.todolist.app.todolist',
   );
 }
